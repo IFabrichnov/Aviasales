@@ -69,6 +69,30 @@ const selectCity = (e, input, list) => {
   }
 }
 
+//функции рендеринга для вывода дешевых билетов
+const renderCheapDay = (cheapTicket) => {
+  console.log(cheapTicket);
+};
+
+const renderCheapYear = (cheapTickets) => {
+  console.log(cheapTickets);
+};
+
+//функция которая будет рендерить рейсы
+const renderCheap = (data, date) => {
+  //получаем самые дешевые билеты
+  const cheapTicketYear = JSON.parse(data).best_prices;
+
+  // отфильтруем билеты на текущий день
+  const cheapTicketDay = cheapTicketYear.filter((item)=>{
+    return item.depart_date === date;
+  });
+
+  //рендерим полученные массивы и выводим их
+  renderCheapDay(cheapTicketDay);
+  renderCheapYear(cheapTicketYear);
+};
+
 //создаем метод, для отслеживания события в поле input Откуда
 inputCitiesFrom.addEventListener('input', () => {
   showCity(inputCitiesFrom,dropdownCitiesFrom);
@@ -89,9 +113,35 @@ dropdownCitiesTo.addEventListener('click', (e) => {
   selectCity(e, inputCitiesTo, dropdownCitiesTo);
 });
 
+//событие для отслеживания нажатия кнопки формы
+formSearch.addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  //переменные для получения города из массива
+  const cityFrom = city.find((item)=> inputCitiesFrom.value === item.name);
+  const cityTo = city.find((item)=> inputCitiesTo.value === item.name);
+
+  //объект для получения кодов городов отправки, прибытия и даты
+  const formData = {
+    from: cityFrom.code,
+    to: cityTo.code,
+    when: inputDateDepart.value
+  }
+
+  //создаем строчку запроса на сервер
+  const requestData = `?depart_date=${formData.when}&origin=${formData.from}`+
+    `&destination=${formData.to}&one_way=true`;
+
+  //делаем запрос и в колбеке пишем функцию использаную выше
+  getData( calendar + requestData, (response) => {
+    renderCheap(response, formData.when);
+  });
+});
 
 // вызовы функций
 getData(citiesApi, (data) => {
   //получаем города и сохраняем их в массив city
   city = JSON.parse(data).filter(item => item.name);
 });
+
+
